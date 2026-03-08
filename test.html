@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magical Keyboard Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #canvas {
+            border: 2px solid #000;
+        }
+        h1 {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #333;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <h1>Press any key to make magic happen!</h1>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        const animations = [];
+
+        function createAnimation(key) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const dx = Math.random() * 5 - 2.5;
+            const dy = Math.random() * 5 - 2.5;
+            const size = Math.random() * 10 + 5;
+            const color = getRandomColor();
+            return { x, y, dx, dy, size, color, key };
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = animations.length - 1; i >= 0; i--) {
+                const animation = animations[i];
+                animation.x += animation.dx;
+                animation.y += animation.dy;
+                animation.dx *= 0.98;
+                animation.dy *= 0.98;
+                if (animation.dx < 0.5 && animation.dy < 0.5) {
+                    animations.splice(i, 1);
+                } else {
+                    ctx.fillStyle = animation.color;
+                    ctx.fillRect(animation.x, animation.y, animation.size, animation.size);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function handleKeyDown(event) {
+            if (keys.includes(event.key.toLowerCase())) {
+                animations.push(createAnimation(event.key.toLowerCase()));
+                createSoundEffect(event.key.toLowerCase());
+            }
+        }
+
+        function createSoundEffect(key) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        window.addEventListener('keydown', handleKeyDown);
+        requestAnimationFrame(update);
+    </script>
+</body>
+</html>
